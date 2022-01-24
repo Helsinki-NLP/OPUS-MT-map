@@ -1,27 +1,52 @@
-# Low-Resource-MT
 
-Promoting work on machine translation in low resource scenarios and for minority and under-resourced languages
+# NMT maps
 
-## Data sets and benchmarks
+Creating maps of available NMT models.
 
-* [FloRes](https://github.com/facebookresearch/flores/) - The Facebook Low Resource MT Benchmark
-* [The Tatoeba MT challenge](https://github.com/Helsinki-NLP/Tatoeba-Challenge) (especially the subsets for [zero-shot](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all-subset-zero.md), [lowest](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all-subset-lowest.md), [lower](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all-subset-lower.md) and [medium](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all-subset-medium.md) sized language pairs
-* [WMT 2020 very low resource MT](http://www.statmt.org/wmt20/unsup_and_very_low_res/)
-* [WMT 2021 low resource MT](http://www.statmt.org/wmt21/)
-* [AmericasNLP shared task on indigenous languages of the Americas](http://turing.iimas.unam.mx/americasnlp/st.html)
-* [Tico-19](https://tico-19.github.io/) - Translation Initiative for COVID-19
+This repository provides scripts that plot information about available NMT models and languages they support on a world map with colors indicating the quality of the model based on BLEU scores (from red to green). It supports plots that show that source language that can be translated to selected target languages or vice versa.
+
+Coordinates are taken from glottolog and will be retrieved from the glottolog database using the langinfo python library (see below).
 
 
-## Projects and project ideas
+## Prerequisites and installation
+
+* langinfo with glottolog info: https://github.com/robertostling/langinfo
+
+Install prerequisites by running
+
+```
+make install
+```
 
 
-* [NMT maps:](NMT-map/): show available models and their quality on maps
-* [NMT leaderboard:](NMT-leaderboard/) Create a streamlined and easy-to-use extensible leaderboard for NMT with support for a growing number of languages and benchmarks
+## Usage
 
 
-## Related projects and initiatives
+* fetch list of released models
+* create maps that plot according to the supported source language of NMT models
+* create maps that plot according to the supported target language of NMT models
 
-* [Masakhane](https://www.masakhane.io/)
-* [GoURMET](https://gourmet-project.eu/)
-* [OPUS](https://opus.nlpl.eu/)
-* [OPUS-MT](https://github.com/Helsinki-NLP/OPUS-MT)
+```
+make model-list
+make src2trg-map
+make trg2src-map
+```
+
+or simple make it all:
+
+```
+make all
+```
+
+If everything works as expected then you should obtain HTML pages that show maps like the ones here: https://opus.nlpl.eu/OPUS-MT/
+
+
+## TODO
+
+* make the language selection in the legend more obvious
+* sort the languages in the legend
+* initialize the map with only one target/source language
+* legend for the color scale
+* support other benchmarks than the Tatoeba benchmark
+* colored background maps (see http://leaflet-extras.github.io/leaflet-providers/preview/)
+* ...
