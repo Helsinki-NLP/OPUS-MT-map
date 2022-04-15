@@ -1,3 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+<head>
+  <meta name="generator" content="HTML Tidy for Linux (vers 25 March 2009), see www.w3.org">
+  <title>OPUS - an open source parallel corpus</title>
+  <link rel="stylesheet" href="index.css" type="text/css">
+  <link rel="icon" href="favicon.ico" type="image/vnd.microsoft.icon">
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-19943693-2']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+  var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+  ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+  </script>
+</head>
+
 <?php
 
 
@@ -19,6 +39,8 @@ $langpair  = implode('-',[$srclang,$trglang]);
 
 $leaderboard_url = 'https://raw.githubusercontent.com/Helsinki-NLP/OPUS-MT-leaderboard/master/scores';
 $testsets = file(implode('/',[$leaderboard_url,'benchmarks.txt']));
+
+echo '<div class="header">';
 
 foreach ($testsets as $testset){
     $parts = explode("\t",$testset);
@@ -98,8 +120,7 @@ else{
     }
 }
 
-
-
+echo '</div>';
 echo("<h1>OPUS-MT leaderboard</h1>");
 
 $metrics = array('bleu', 'chrf');
@@ -110,35 +131,66 @@ foreach ($metrics as $m){
     }
 }
 
+$testset_url = 'https://github.com/Helsinki-NLP/OPUS-MT-testsets/tree/master/testsets';
+if ($benchmark == 'flores101-dev'){
+    $testset_src = implode('/',[$testset_url,'flores101_dataset','dev',$srclang]).".dev";
+    $testset_trg = implode('/',[$testset_url,'flores101_dataset','dev',$trglang]).".dev";
+}
+elseif ($benchmark == 'flores101-devtest'){
+    $testset_src = implode('/',[$testset_url,'flores101_dataset','devtest',$srclang]).".devtest";
+    $testset_trg = implode('/',[$testset_url,'flores101_dataset','devtest',$trglang]).".devtest";
+}
+else{
+    $testset_src = implode('/',[$testset_url,$langpair,$benchmark]).".$srclang";
+    $testset_trg = implode('/',[$testset_url,$langpair,$benchmark]).".$trglang";
+}
+
+$testset_srclink = "<a href=\"$testset_src\">$srclang</a>";
+$testset_trglink = "<a href=\"$testset_trg\">$trglang</a>";
+
 echo("<ul>");
-echo("<li>language pair: $langpair</li>");
 echo("<li>benchmark: $benchmark</li>");
+// echo("<li>language pair: $langpair</li>");
+echo("<li>language pair: $testset_srclink - $testset_trglink</li>");
 echo("<li>metrics: $metric");
 foreach ($metriclinks as $m => $l){
     echo(" | <a href=\"$l\">$m</a>");
 }
 echo("</li></ul>");
 
-echo("<img src=\"barchart.php?src=$srclang&trg=$trglang&test=$benchmark&metric=$metric\" alt=\"barchart\" />");
 
 
-$file     = implode('/',[$leaderboard_url,$langpair,$benchmark,$metric]);
-$file    .= '-scores.txt';
+
+$file  = implode('/',[$leaderboard_url,$langpair,$benchmark,$metric]);
+$file .= '-scores.txt';
 $lines = file($file);
+$id    = sizeof($lines);
 
-
-$id=sizeof($lines);
-echo('<table>');
-echo("<tr><th>ID</th><th>Score</th><th>Model</th></tr>");
-foreach ($lines as $line){
-    $id--;
-    $parts = explode("\t",$line);
-    $model = explode('/',$parts[1]);
-    $modelzip = array_pop($model);
-    $modellang = array_pop($model);
-    $link = "<a href=\"$parts[1]\">$modellang/$modelzip</a>";
-    echo("<tr><td>$id</td><td>$parts[0]</td><td>$link</td></tr>");
+if ($id>0 and $lines[0]){
+    echo '<table><tr><td>';
+    echo("<img src=\"barchart.php?src=$srclang&trg=$trglang&test=$benchmark&metric=$metric\" alt=\"barchart\" />");
+    echo '</td><td>';
+    echo '<div class="query">';
+    echo('<table>');
+    echo("<tr><th>ID</th><th>Score</th><th>Translations</th><th>Other&nbsp;Scores</th><th>Model</th></tr>");
+    foreach ($lines as $line){
+        $id--;
+        $parts = explode("\t",$line);
+        $model = explode('/',$parts[1]);
+        $modelzip = array_pop($model);
+        $modellang = array_pop($model);
+        $baselink = substr($parts[1], 0, -5);
+        $link = "<a href=\"$parts[1]\">$modellang/$modelzip</a>";
+        $evallink = "<a href=\"$baselink.eval.zip\">evaluation&nbsp;files</a>";
+        $scoreslink = "<a href=\"$baselink.scores.txt\">score&nbsp;file</a>";
+        echo("<tr><td>$id</td><td>$parts[0]</td><td>$evallink</td><td>$scoreslink</td><td>$link</td></tr>");
+    }
+    echo('</table>');
+    echo('</div>');
+    echo '</td></tr></table>';
 }
-echo('</table>');
+else{
+    echo "No results available for this dataset.";
+}
 
 ?>
