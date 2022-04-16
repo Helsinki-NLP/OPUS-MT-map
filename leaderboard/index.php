@@ -126,6 +126,8 @@ else{
         $parts = explode('-',$langpair);
         $srclang = $parts[0];
         $trglang = $parts[1];
+        $srclang_url = urlencode($srclang);
+        $trglang_url = urlencode($trglang);
         echo("Invalid language pair $oldlang for this benchmark: change to $langpair!");
     }
 }
