@@ -8,32 +8,63 @@ function test_input($data) {
   return $data;
 }
 
-$srclang   = $_GET['src']    ? test_input($_GET['src'])    : 'deu';
-$trglang   = $_GET['trg']    ? test_input($_GET['trg'])    : 'eng';
-$benchmark = $_GET['test']   ? test_input($_GET['test'])   : 'flores101-devtest';
-$metric    = $_GET['metric'] ? test_input($_GET['metric']) : 'bleu';
+$srclang   = isset($_GET['src'])    ? test_input($_GET['src'])    : 'deu';
+$trglang   = isset($_GET['trg'])    ? test_input($_GET['trg'])    : 'eng';
+$benchmark = isset($_GET['test'])   ? test_input($_GET['test'])   : 'flores101-devtest';
+$metric    = isset($_GET['metric']) ? test_input($_GET['metric']) : 'bleu';
 
+if (isset($_GET['model'])){
+    $modelhome = 'https://object.pouta.csc.fi/Tatoeba-MT-models';
+    // $modelbase = substr($_GET['model'], 0, -5);
+    $file = implode('/',[$modelhome,$_GET['model']]).'.scores.txt';
+    $lines = file($file);
+    // $lines = file($_GET['scores']);
+}
+else{
+    $leaderboard_url = 'https://raw.githubusercontent.com/Helsinki-NLP/OPUS-MT-leaderboard/master/scores';
+    $langpair = implode('-',[$srclang,$trglang]);
+    $file     = implode('/',[$leaderboard_url,$langpair,$benchmark,$metric]);
+    $file    .= '-scores.txt';
+    $lines = file($file);
+}
 
-$leaderboard_url = 'https://raw.githubusercontent.com/Helsinki-NLP/OPUS-MT-leaderboard/master/scores';
-$langpair = implode('-',[$srclang,$trglang]);
-$file     = implode('/',[$leaderboard_url,$langpair,$benchmark,$metric]);
-$file    .= '-scores.txt';
-$lines = file($file);
 
 // $lines = file("https://raw.githubusercontent.com/Helsinki-NLP/OPUS-MT-leaderboard/master/scores/deu-eng/newstest2018/bleu-scores.txt");
-                
+
+// https://object.pouta.csc.fi/Tatoeba-MT-models/fin-eng/opusTCv20210807+bt-2021-11-09.scores.txt
+
 
 $data = array();
-foreach($lines as $line) {
-    $array = explode("\t", $line);
-    array_unshift($data,$array[0]);
+if (isset($_GET['model'])){
+    $maxscore = 0;
+    if (isset($_GET['scoreslang'])){
+        $langpair = $_GET['scoreslang'];
+    }
+    foreach($lines as $line) {
+        $array = explode("\t", $line);
+        if (isset($langpair)){
+            if ($langpair != $array[0]){
+                continue;
+            }
+        }
+        $score = $metric == 'bleu' ? $array[3] : $array[2];
+        array_unshift($data,$score);
+        if ( $maxscore < $score ){
+            $maxscore = $score;
+        }
+    }
+}
+else{
+    foreach($lines as $line) {
+        $array = explode("\t", $line);
+        array_unshift($data,$array[0]);
+    }
+    $maxscore = end($data);
 }
 
 if (sizeof($data) == 0){
     $data[0] = 0;
 }
-
-$maxscore = end($data);
 $nrscores = sizeof($data);
 
 
