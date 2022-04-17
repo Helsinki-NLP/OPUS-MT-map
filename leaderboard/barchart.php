@@ -1,5 +1,6 @@
 <?php
 
+// adapted from https://www.infscripts.com/how-to-create-a-bar-chart-in-php
 
 function test_input($data) {
   $data = trim($data);
@@ -48,7 +49,7 @@ if (isset($_GET['model'])){
             }
         }
         $score = $metric == 'bleu' ? $array[3] : $array[2];
-        array_unshift($data,$score);
+        array_push($data,$score);
         if ( $maxscore < $score ){
             $maxscore = $score;
         }
