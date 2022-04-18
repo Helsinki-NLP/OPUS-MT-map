@@ -24,18 +24,23 @@ if (isset($_GET['model'])){
 else{
     $leaderboard_url = 'https://raw.githubusercontent.com/Helsinki-NLP/OPUS-MT-leaderboard/master/scores';
     $langpair = implode('-',[$srclang,$trglang]);
-    $file     = implode('/',[$leaderboard_url,$langpair,$benchmark,$metric]);
-    $file    .= '-scores.txt';
+    if (isset($_GET['test'])){
+        $file     = implode('/',[$leaderboard_url,$langpair,$benchmark,$metric.'-scores.txt']);
+    }
+    else{
+        $file     = implode('/',[$leaderboard_url,$langpair,'top-'.$metric.'-scores.txt']);
+    }
     $lines = file($file);
 }
 
 
+// $lines = file("https://raw.githubusercontent.com/Helsinki-NLP/OPUS-MT-leaderboard/master/scores/deu-eng/top-bleu-scores.txt");
 // $lines = file("https://raw.githubusercontent.com/Helsinki-NLP/OPUS-MT-leaderboard/master/scores/deu-eng/newstest2018/bleu-scores.txt");
-
 // https://object.pouta.csc.fi/Tatoeba-MT-models/fin-eng/opusTCv20210807+bt-2021-11-09.scores.txt
 
 
 $data = array();
+// read model-specific scores
 if (isset($_GET['model'])){
     $maxscore = 0;
     if (isset($_GET['scoreslang'])){
@@ -55,12 +60,24 @@ if (isset($_GET['model'])){
         }
     }
 }
-else{
+// read from benchmark-specific leaderboard
+elseif (isset($_GET['test'])){
     foreach($lines as $line) {
         $array = explode("\t", $line);
         array_unshift($data,$array[0]);
     }
     $maxscore = end($data);
+}
+// read from top-score files
+else{
+    $maxscore = 0;
+    foreach($lines as $line) {
+        $array = explode("\t", $line);
+        array_push($data,$array[1]);
+        if ( $maxscore < $array[1] ){
+            $maxscore = $array[1];
+        }
+    }
 }
 
 if (sizeof($data) == 0){
