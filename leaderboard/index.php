@@ -3,6 +3,7 @@
 <html>
 <head>
   <title>OPUS-MT - Leaderboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"> 
   <link rel="stylesheet" href="index.css" type="text/css">
 </head>
 <body>
@@ -123,6 +124,7 @@ echo '</div>';
 
 
 echo '<br/><table><tr><td>';
+echo('<div id="chart">');
 echo("<h1>OPUS-MT leaderboard</h1>");
 
 $metrics = array('bleu', 'chrf');
@@ -157,12 +159,11 @@ else{
 echo("<ul>");
 if (isset($_GET['model'])){
     $parts = explode('/',$_GET['model']);
-    $scorefile = array_pop($parts);
-    $scorelang = array_pop($parts);
-    $modelbase = substr($scorefile, 0, -11);
-    echo("<li>model: $scorelang/$modelbase</li>");
+    $modelfile = array_pop($parts);
+    $modellang = array_pop($parts);
     $model_url = urlencode($_GET['model']);
-    if ($scorelang == $langpair){
+    echo("<li>model: $modellang/$modelfile</li>");
+    if ($modellang == $langpair){
         echo("<li>language pair: $langpair</li>");
     }
     else{
@@ -186,12 +187,12 @@ if (isset($_GET['model'])){
     }
 }
 elseif (isset($_GET['test'])){
-    echo("<li>benchmark: $benchmark");
-    $url_param = "metric=$metric_url&src=$srclang_url&trg=$trglang_url";
-    echo(" [<a href=\"index.php?$url_param\">all benchmarks</a>]</li>");
     $testset_srclink = "<a href=\"$testset_src\">$srclang</a>";
     $testset_trglink = "<a href=\"$testset_trg\">$trglang</a>";
     echo("<li>language pair: $testset_srclink - $testset_trglink</li>");
+    echo("<li>benchmark: $benchmark");
+    $url_param = "metric=$metric_url&src=$srclang_url&trg=$trglang_url";
+    echo(" [<a href=\"index.php?$url_param\">all benchmarks</a>]</li>");
 }
 else{
     echo("<li>language pair: $langpair");
@@ -231,17 +232,22 @@ if ($id>0 and $lines[0]){
         }
     }
     echo("<img src=\"barchart.php?$url_param\" alt=\"barchart\" />");
+    echo '</div><div id="scores">';
+    // echo '</td><td><div class="query">';
+    echo '<div class="query">';
+
     if (isset($_GET['model'])){
         print_score_table($_GET['model'],$_GET['scoreslang']);
     }
-    echo '</td><td>';
-    echo '<div class="query">';
+    else{
+
     echo('<table><tr><th>ID</th>');
     if ( ! isset($_GET['test'])){
         echo("<th>Benchmark</th>");
     }
     echo("<th>$metric</th><th>other</th><th>output</th><th>model</th></tr>");
     $langpair_url = urlencode($langpair);
+    $url_param = "src=$srclang_url&trg=$trglang_url&metric=$metric_url";
     $count=0;
     foreach ($lines as $line){
         $id--;
@@ -256,18 +262,18 @@ if ($id>0 and $lines[0]){
         $modelbase = substr($modelzip, 0, -4);
         $baselink = substr($parts[1], 0, -4);
         $link = "<a href=\"$parts[1]\">$modellang/$modelzip</a>";
-        $evallink = "<a href=\"$baselink.eval.zip\">zip-file</a>";
+        $evallink = "<a href=\"$baselink.eval.zip\">zipfile</a>";
         $model_url = urlencode("$modellang/$modelbase");
-        $url_param = "src=$srclang_url&trg=$trglang_url&test=$benchmark_url&metric=$metric_url";
         $scoreslink = "<a href=\"index.php?$url_param&model=$model_url&scoreslang=$langpair_url\">scores</a>";
         if ( ! isset($_GET['test'])){
-            echo("<tr><td>$count</td><td><a href=\"index.php?$url_param\">$benchmark</a></td>");
+            echo("<tr><td>$count</td><td><a href=\"index.php?$url_param&test=$benchmark_url\">$benchmark</a></td>");
         }
         else{
             echo("<tr><td>$id</td>");
         }
         echo("<td>$parts[0]</td><td>$scoreslink</td><td>$evallink</td><td>$link</td></tr>");
         $count++;
+    }
     }
     echo('</table>');
     echo('</div>');
@@ -283,10 +289,11 @@ function print_score_table($model,$langpair){
     $modelhome = 'https://object.pouta.csc.fi/Tatoeba-MT-models';
     $score_file = implode('/',[$modelhome,$model]).'.scores.txt';
     $lines = file($score_file);
-    echo '<div class="query">';
     echo('<table>');
     echo("<tr><th>ID</th><th>Language</th><th>Benchmark</th><th>ChrF</th><th>BLEU</th></tr>");
     $id = 0;
+    // $url_param = "metric=$metric_url&src=$srclang_url&trg=$trglang_url";
+    $langlinks = array();
     foreach ($lines as $line){
         $parts = explode("\t",$line);
         if (isset($langpair)){
@@ -294,11 +301,20 @@ function print_score_table($model,$langpair){
                 continue;
             }
         }
-        echo("<tr><td>$id</td><td>$parts[0]</td><td>$parts[1]</td><td>$parts[2]</td><td>$parts[3]</td></tr>");
+        if (array_key_exists($parts[0],$langlinks)){
+            $langlink = $langlinks[$parts[0]];
+        }
+        else{            
+            $langs = explode('-',$parts[0]);
+            $srclang_url = urlencode($langs[0]);
+            $trglang_url = urlencode($langs[1]);
+            $langlink = "<a href=\"index.php?src=$srclang_url&trg=$trglang_url\">$parts[0]</a>";
+            $langlinks[$parts[0]] = $langlink;
+        }
+        echo("<tr><td>$id</td><td>$langlink</td><td>$parts[1]</td><td>$parts[2]</td><td>$parts[3]</td></tr>");
         $id++;
     }
     echo('</table>');
-    echo('</div>');
 }
 
 
