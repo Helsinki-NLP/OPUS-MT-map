@@ -38,7 +38,7 @@ or simple make it all:
 make all
 ```
 
-If everything works as expected then you should obtain HTML pages that show maps like the ones here: https://opus.nlpl.eu/OPUS-MT/
+If everything works as expected then you should obtain HTML pages that show maps like the ones here: https://opus.nlpl.eu/NMT-map/Tatoeba-all/src2trg/
 
 
 ## TODO
